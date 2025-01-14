@@ -54,15 +54,15 @@ jobs:
           retention-days: 3
 
       - name: Post Helm Diff artifact link as comment
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const artifactName = 'helm-diff-output';
             const runId = context.runId;
-            const artifactUrl = `${diff_artifact.outputs.artifact_url}`;
+            const artifactUrl = `${steps.diff_artifact.outputs.artifact_url}`;
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `### Helm Diff Artifact\nYou can download the artifact [here](${artifactUrl}).`
+              body: `### Helm Diff Artifact\nYou can download the latest diff output [here](${artifactUrl}) or check your latest CI logs.`
             });
