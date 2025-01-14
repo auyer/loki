@@ -39,32 +39,31 @@ jobs:
           helm install --create-namespace loki-release grafana/loki -f production/helm/loki/scenarios/default-single-binary-values.yaml --version 6.21.0
 
       - name: Run helm diff
+        id: helm-diff
         env:
           HELM_DIFF_USE_UPGRADE_DRY_RUN: true
         run: |
           helm diff upgrade loki-release -f production/helm/loki/scenarios/default-single-binary-values.yaml production/helm/loki | tee helm_diff_output.txt
 
-      - name: Parse Helm Diff Output
-        id: parse_diff
-        run: |
-          echo "### Helm Diff Output" > parsed_diff_output.txt
-          echo "#### Added" >> parsed_diff_output.txt
-          grep '^+' helm_diff_output.txt | grep -v '^+++' >> parsed_diff_output.txt
-          echo "#### Modified" >> parsed_diff_output.txt
-          grep '^!' helm_diff_output.txt >> parsed_diff_output.txt
-          echo "#### Removed" >> parsed_diff_output.txt
-          grep '^-' helm_diff_output.txt | grep -v '^---' >> parsed_diff_output.txt
-          cat parsed_diff_output.txt
+      - name: Publish artifact with diff
+        uses: actions/upload-artifact@v2
+        id: diff_artifact
+        with:
+          name: helm_diff_output
+          path: helm_diff_output.txt
+          retention-days: 3
 
-      - name: Post Parsed Helm Diff Output as PR Comment
+
+      - name: Post Helm Diff artifact link as comment
         uses: actions/github-script@v6
         with:
           script: |
-            const fs = require('fs');
-            const parsedDiffOutput = fs.readFileSync('parsed_diff_output.txt', 'utf8');
+            const artifactName = 'helm-diff-output';
+            const runId = context.runId;
+            const artifactUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/suites/${runId}/artifacts`;
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: parsedDiffOutput
+              body: `### Helm Diff Artifact\nYou can download the artifact [here](${artifactUrl}).`
             });
