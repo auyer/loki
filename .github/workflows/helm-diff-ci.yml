@@ -46,13 +46,12 @@ jobs:
           helm diff upgrade loki-release -f production/helm/loki/scenarios/default-single-binary-values.yaml production/helm/loki | tee helm_diff_output.txt
 
       - name: Publish artifact with diff
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         id: diff_artifact
         with:
           name: helm_diff_output
           path: helm_diff_output.txt
           retention-days: 3
-
 
       - name: Post Helm Diff artifact link as comment
         uses: actions/github-script@v6
