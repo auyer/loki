@@ -42,7 +42,7 @@ jobs:
         env:
           HELM_DIFF_USE_UPGRADE_DRY_RUN: true
         run: |
-          helm diff upgrade loki-release -f production/helm/loki/scenarios/default-single-binary-values.yaml production/helm/loki > helm_diff_output.txt
+          helm diff upgrade loki-release -f production/helm/loki/scenarios/default-single-binary-values.yaml production/helm/loki | tee helm_diff_output.txt
 
       - name: Parse Helm Diff Output
         id: parse_diff
