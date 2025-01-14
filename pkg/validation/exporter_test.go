@@ -3,6 +3,7 @@ package validation
 import (
 	"testing"
 
+	"github.com/grafana/loki/v3/pkg/runtime"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,7 +26,7 @@ func (l *mockTenantLimits) TenantLimits(userID string) *Limits {
 func (l *mockTenantLimits) AllByUserID() map[string]*Limits { return l.limits }
 
 func TestOverridesExporter_noConfig(t *testing.T) {
-	overrides, _ := NewOverrides(Limits{}, newMockTenantLimits(nil))
+	overrides, _ := runtime.NewOverrides(Limits{}, newMockTenantLimits(nil))
 	exporter := NewOverridesExporter(overrides)
 	count := testutil.CollectAndCount(exporter, "loki_overrides")
 	assert.Equal(t, 0, count)
@@ -39,7 +40,7 @@ func TestOverridesExporter_withConfig(t *testing.T) {
 			BloomCreationEnabled: true,
 		},
 	}
-	overrides, _ := NewOverrides(Limits{}, newMockTenantLimits(tenantLimits))
+	overrides, _ := runtime.NewOverrides(Limits{}, newMockTenantLimits(tenantLimits))
 	exporter := NewOverridesExporter(overrides)
 	count := testutil.CollectAndCount(exporter, "loki_overrides")
 	assert.Equal(t, 2, count)

@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/grafana/loki/v3/pkg/bloombuild/planner/plannertest"
+	"github.com/grafana/loki/v3/pkg/runtime"
 	"github.com/grafana/loki/v3/pkg/storage"
 	v1 "github.com/grafana/loki/v3/pkg/storage/bloom/v1"
 	"github.com/grafana/loki/v3/pkg/storage/chunk/cache"
@@ -21,7 +22,6 @@ import (
 	"github.com/grafana/loki/v3/pkg/storage/stores/shipper/bloomshipper/config"
 	"github.com/grafana/loki/v3/pkg/storage/types"
 	"github.com/grafana/loki/v3/pkg/util/mempool"
-	"github.com/grafana/loki/v3/pkg/validation"
 )
 
 var testTime = plannertest.ParseDayTime("2024-12-31").ModelTime()
@@ -116,7 +116,7 @@ func TestRetention(t *testing.T) {
 					"3": 200 * 24 * time.Hour,
 					"4": 400 * 24 * time.Hour,
 				},
-				streamRetention: map[string][]validation.StreamRetention{
+				streamRetention: map[string][]runtime.StreamRetention{
 					"1": {
 						{
 							Period: model.Duration(30 * 24 * time.Hour),
@@ -178,7 +178,7 @@ func TestRetention(t *testing.T) {
 					"3": 200 * 24 * time.Hour,
 					"4": 400 * 24 * time.Hour,
 				},
-				streamRetention: map[string][]validation.StreamRetention{
+				streamRetention: map[string][]runtime.StreamRetention{
 					"1": {
 						{
 							Period: model.Duration(30 * 24 * time.Hour),
@@ -350,7 +350,7 @@ func TestFindLongestRetention(t *testing.T) {
 	for _, tc := range []struct {
 		name              string
 		globalRetention   time.Duration
-		streamRetention   []validation.StreamRetention
+		streamRetention   []runtime.StreamRetention
 		expectedRetention time.Duration
 	}{
 		{
@@ -364,7 +364,7 @@ func TestFindLongestRetention(t *testing.T) {
 		},
 		{
 			name: "stream retention",
-			streamRetention: []validation.StreamRetention{
+			streamRetention: []runtime.StreamRetention{
 				{
 					Period: model.Duration(30 * 24 * time.Hour),
 				},
@@ -373,7 +373,7 @@ func TestFindLongestRetention(t *testing.T) {
 		},
 		{
 			name: "two stream retention",
-			streamRetention: []validation.StreamRetention{
+			streamRetention: []runtime.StreamRetention{
 				{
 					Period: model.Duration(30 * 24 * time.Hour),
 				},
@@ -386,7 +386,7 @@ func TestFindLongestRetention(t *testing.T) {
 		{
 			name:            "stream retention bigger than global",
 			globalRetention: 20 * 24 * time.Hour,
-			streamRetention: []validation.StreamRetention{
+			streamRetention: []runtime.StreamRetention{
 				{
 					Period: model.Duration(30 * 24 * time.Hour),
 				},
@@ -399,7 +399,7 @@ func TestFindLongestRetention(t *testing.T) {
 		{
 			name:            "global retention bigger than stream",
 			globalRetention: 40 * 24 * time.Hour,
-			streamRetention: []validation.StreamRetention{
+			streamRetention: []runtime.StreamRetention{
 				{
 					Period: model.Duration(20 * 24 * time.Hour),
 				},
@@ -439,7 +439,7 @@ func TestSmallestRetention(t *testing.T) {
 		{
 			name: "default stream retention",
 			limits: mockRetentionLimits{
-				defaultStreamRetention: []validation.StreamRetention{
+				defaultStreamRetention: []runtime.StreamRetention{
 					{
 						Period: model.Duration(30 * 24 * time.Hour),
 					},
@@ -463,7 +463,7 @@ func TestSmallestRetention(t *testing.T) {
 				retention: map[string]time.Duration{
 					"1": 30 * 24 * time.Hour,
 				},
-				streamRetention: map[string][]validation.StreamRetention{
+				streamRetention: map[string][]runtime.StreamRetention{
 					"1": {
 						{
 							Period: model.Duration(40 * 24 * time.Hour),
@@ -480,7 +480,7 @@ func TestSmallestRetention(t *testing.T) {
 					"1": 30 * 24 * time.Hour,
 					"2": 20 * 24 * time.Hour,
 				},
-				streamRetention: map[string][]validation.StreamRetention{
+				streamRetention: map[string][]runtime.StreamRetention{
 					"1": {
 						{
 							Period: model.Duration(40 * 24 * time.Hour),
@@ -501,7 +501,7 @@ func TestSmallestRetention(t *testing.T) {
 				retention: map[string]time.Duration{
 					"1": 10 * 24 * time.Hour,
 				},
-				streamRetention: map[string][]validation.StreamRetention{
+				streamRetention: map[string][]runtime.StreamRetention{
 					"1": {
 						{
 							Period: model.Duration(20 * 24 * time.Hour),
@@ -509,7 +509,7 @@ func TestSmallestRetention(t *testing.T) {
 					},
 				},
 				defaultRetention: 40 * 24 * time.Hour,
-				defaultStreamRetention: []validation.StreamRetention{
+				defaultStreamRetention: []runtime.StreamRetention{
 					{
 						Period: model.Duration(30 * 24 * time.Hour),
 					},
@@ -523,7 +523,7 @@ func TestSmallestRetention(t *testing.T) {
 				retention: map[string]time.Duration{
 					"1": 30 * 24 * time.Hour,
 				},
-				streamRetention: map[string][]validation.StreamRetention{
+				streamRetention: map[string][]runtime.StreamRetention{
 					"1": {
 						{
 							Period: model.Duration(40 * 24 * time.Hour),
@@ -531,7 +531,7 @@ func TestSmallestRetention(t *testing.T) {
 					},
 				},
 				defaultRetention: 10 * 24 * time.Hour,
-				defaultStreamRetention: []validation.StreamRetention{
+				defaultStreamRetention: []runtime.StreamRetention{
 					{
 						Period: model.Duration(20 * 24 * time.Hour),
 					},
@@ -722,32 +722,32 @@ func NewMockBloomStoreWithWorkDir(t *testing.T, workDir string, logger log.Logge
 
 type mockRetentionLimits struct {
 	retention              map[string]time.Duration
-	streamRetention        map[string][]validation.StreamRetention
+	streamRetention        map[string][]runtime.StreamRetention
 	defaultRetention       time.Duration
-	defaultStreamRetention []validation.StreamRetention
+	defaultStreamRetention []runtime.StreamRetention
 }
 
 func (m mockRetentionLimits) RetentionPeriod(tenant string) time.Duration {
 	return m.retention[tenant]
 }
 
-func (m mockRetentionLimits) StreamRetention(tenant string) []validation.StreamRetention {
+func (m mockRetentionLimits) StreamRetention(tenant string) []runtime.StreamRetention {
 	return m.streamRetention[tenant]
 }
 
-func (m mockRetentionLimits) AllByUserID() map[string]*validation.Limits {
-	tenants := make(map[string]*validation.Limits, len(m.retention))
+func (m mockRetentionLimits) AllByUserID() map[string]*runtime.Limits {
+	tenants := make(map[string]*runtime.Limits, len(m.retention))
 
 	for tenant, retention := range m.retention {
 		if _, ok := tenants[tenant]; !ok {
-			tenants[tenant] = &validation.Limits{}
+			tenants[tenant] = &runtime.Limits{}
 		}
 		tenants[tenant].RetentionPeriod = model.Duration(retention)
 	}
 
 	for tenant, streamRetention := range m.streamRetention {
 		if _, ok := tenants[tenant]; !ok {
-			tenants[tenant] = &validation.Limits{}
+			tenants[tenant] = &runtime.Limits{}
 		}
 		tenants[tenant].StreamRetention = streamRetention
 	}
@@ -755,8 +755,8 @@ func (m mockRetentionLimits) AllByUserID() map[string]*validation.Limits {
 	return tenants
 }
 
-func (m mockRetentionLimits) DefaultLimits() *validation.Limits {
-	return &validation.Limits{
+func (m mockRetentionLimits) DefaultLimits() *runtime.Limits {
+	return &runtime.Limits{
 		RetentionPeriod: model.Duration(m.defaultRetention),
 		StreamRetention: m.defaultStreamRetention,
 	}
