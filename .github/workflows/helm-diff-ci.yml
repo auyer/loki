@@ -1,5 +1,5 @@
 ---
-name: Helm Loki CI
+name: Helm Loki Diff CI
 on: [pull_request]
     # paths:
     #   - "production/helm/loki/**"
