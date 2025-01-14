@@ -59,7 +59,7 @@ jobs:
           script: |
             const artifactName = 'helm-diff-output';
             const runId = context.runId;
-            const artifactUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/suites/${runId}/artifacts`;
+            const artifactUrl = `${diff_artifact.outputs.artifact_url}`;
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
