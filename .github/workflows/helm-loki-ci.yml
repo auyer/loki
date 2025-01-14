@@ -2,6 +2,8 @@
 name: helm-loki-ci
 on:
   pull_request:
+      branches:
+        - main
     # paths:
     #   - "production/helm/loki/**"
 
